@@ -15,6 +15,7 @@
 
 package com.roughlyundescore.truapi
 
+import org.bukkit.command.CommandExecutor
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import java.nio.file.Paths
@@ -79,6 +80,32 @@ class MainClassUtils {
      */
     fun registerListeners(plugin: JavaPlugin, vararg listeners: Listener) {
       for (listener in listeners) plugin.server.pluginManager.registerEvents(listener, plugin)
+    }
+
+    /**
+     * Creates a new instance of each command class and registers it against the plugin. The command classes must
+     * have their primary constructor take a JavaPlugin and only a JavaPlugin. For those that don't, use [registerCommands].
+     * @param plugin The plugin to register the commands for.
+     * @param classes The classes to register.
+     * @since 1.0
+     * @see registerCommands
+     * @throws Exception See the documentation for [Constructor.newInstance].
+     */
+    fun registerCommandClasses(plugin: JavaPlugin, vararg classes: Pair<String, Class<out CommandExecutor>>) {
+      for (clazz in classes) {
+        val instance = clazz.second.constructors.first().newInstance(plugin) as CommandExecutor
+        registerCommands(plugin, clazz.first to instance)
+      }
+    }
+
+    /**
+     * Registers the commands against the plugin. For any command that does not exist, the method
+     * will fail silently.
+     * @param plugin The plugin to register the commands for.
+     * @param commands The commands to register in the format of a pair of a command name & a command executor.
+     */
+    fun registerCommands(plugin: JavaPlugin, vararg commands: Pair<String, CommandExecutor>) {
+      for (command in commands) plugin.getCommand(command.first)?.setExecutor(command.second)
     }
   }
 }
